@@ -118,6 +118,12 @@ namespace Microsoft.Xna.Platform.XR
 
         private HeadsetState _headsetState;
         private HandsState _handsState;
+        private HandTrackingState _handTrackingState;
+
+        // Hand tracking
+        private bool _isHandTrackingSupported;
+        private OxrHandTracker _leftHandTracker;
+        private OxrHandTracker _rightHandTracker;
 
         OxrSwapChainDataBase[] _swapChainData = new OxrSwapChainDataBase[2];
 
@@ -465,6 +471,12 @@ namespace Microsoft.Xna.Platform.XR
                 }
             }
 
+            // Update hand tracking
+            if (_isHandTrackingSupported && _leftHandTracker != null && _rightHandTracker != null)
+            {
+                UpdateHandTracking(_frameState.PredictedDisplayTime);
+            }
+
             // OpenXR input
             {
                 // sync action data
@@ -784,6 +796,78 @@ namespace Microsoft.Xna.Platform.XR
             return _handsState;
         }
 
+        public override HandTrackingState GetHandTrackingState()
+        {
+            return _handTrackingState;
+        }
+
+        private int _handTrackingDebugCounter = 0;
+
+        private void UpdateHandTracking(long displayTime)
+        {
+            // Get the reference space for hand tracking (use local floor if available)
+            OxrSpace referenceSpace = _LocalFloorSpace ?? _LocalSpace;
+
+            // Update left hand
+            Result leftResult = _leftHandTracker.LocateJoints(referenceSpace, displayTime);
+            _handTrackingState.IsLeftHandTracked = (leftResult == Result.Success && _leftHandTracker.IsActive);
+
+            // Debug logging
+            _handTrackingDebugCounter++;
+            if (_handTrackingDebugCounter % 72 == 0)
+            {
+                Console.WriteLine($"UpdateHandTracking - leftResult: {leftResult}, IsActive: {_leftHandTracker.IsActive}");
+            }
+
+            if (_handTrackingState.IsLeftHandTracked)
+            {
+                for (int j = 0; j < OxrHandTracker.JointCount; j++)
+                {
+                    HandJointLocationEXT jointLocation = _leftHandTracker.GetJointLocation(j);
+                    HandJointVelocityEXT jointVelocity = _leftHandTracker.GetJointVelocity(j);
+
+                    HandJointState jointState = new HandJointState();
+                    jointState.Pose = jointLocation.Pose.ToPose3();
+                    jointState.Radius = jointLocation.Radius;
+                    jointState.LinearVelocity = new Vector3(jointVelocity.LinearVelocity.X, jointVelocity.LinearVelocity.Y, jointVelocity.LinearVelocity.Z);
+                    jointState.AngularVelocity = new Vector3(jointVelocity.AngularVelocity.X, jointVelocity.AngularVelocity.Y, jointVelocity.AngularVelocity.Z);
+                    jointState.IsValid = (jointLocation.LocationFlags & SpaceLocationFlags.PositionValidBit) != 0;
+
+                    // Debug: log wrist joint flags and pose
+                    if (j == 1 && _handTrackingDebugCounter % 72 == 0) // Wrist is joint 1
+                    {
+                        Console.WriteLine($"Wrist LocationFlags: {jointLocation.LocationFlags} (int: {(int)jointLocation.LocationFlags})");
+                        Console.WriteLine($"Wrist Pose: pos=({jointLocation.Pose.Position.X:F3}, {jointLocation.Pose.Position.Y:F3}, {jointLocation.Pose.Position.Z:F3})");
+                        Console.WriteLine($"Wrist Radius: {jointLocation.Radius}");
+                    }
+
+                    _handTrackingState.SetLeftJoint(j, jointState);
+                }
+            }
+
+            // Update right hand
+            Result rightResult = _rightHandTracker.LocateJoints(referenceSpace, displayTime);
+            _handTrackingState.IsRightHandTracked = (rightResult == Result.Success && _rightHandTracker.IsActive);
+
+            if (_handTrackingState.IsRightHandTracked)
+            {
+                for (int j = 0; j < OxrHandTracker.JointCount; j++)
+                {
+                    HandJointLocationEXT jointLocation = _rightHandTracker.GetJointLocation(j);
+                    HandJointVelocityEXT jointVelocity = _rightHandTracker.GetJointVelocity(j);
+
+                    HandJointState jointState = new HandJointState();
+                    jointState.Pose = jointLocation.Pose.ToPose3();
+                    jointState.Radius = jointLocation.Radius;
+                    jointState.LinearVelocity = new Vector3(jointVelocity.LinearVelocity.X, jointVelocity.LinearVelocity.Y, jointVelocity.LinearVelocity.Z);
+                    jointState.AngularVelocity = new Vector3(jointVelocity.AngularVelocity.X, jointVelocity.AngularVelocity.Y, jointVelocity.AngularVelocity.Z);
+                    jointState.IsValid = (jointLocation.LocationFlags & SpaceLocationFlags.PositionValidBit) != 0;
+
+                    _handTrackingState.SetRightJoint(j, jointState);
+                }
+            }
+        }
+
         public override void EndSessionAsync()
         {
             throw new PlatformNotSupportedException();
@@ -851,6 +935,11 @@ namespace Microsoft.Xna.Platform.XR
 
             if (this.SessionMode == XRSessionMode.AR)
                 requiredExtensionNames.Add(nameof(OxrExtensions.XR_FB_passthrough));
+
+            // Add hand tracking extension if supported
+            _isHandTrackingSupported = _extensions.Contains(nameof(OxrExtensions.XR_EXT_hand_tracking));
+            if (_isHandTrackingSupported)
+                requiredExtensionNames.Add(nameof(OxrExtensions.XR_EXT_hand_tracking));
 
             // Check the list of required extensions against what is supported by the runtime.
             uint numRequiredExtensions = (uint)requiredExtensionNames.Count;
@@ -1176,6 +1265,23 @@ namespace Microsoft.Xna.Platform.XR
 
                 xrResult = _passthroughFB.Start();
                 xrResult = _passthroughLayerFB.Resume();
+            }
+
+            // setup hand tracking
+            if (_isHandTrackingSupported)
+            {
+                try
+                {
+                    _leftHandTracker = _oxrSession.CreateHandTracker(HandEXT.LeftExt, _oxrInstance);
+                    _rightHandTracker = _oxrSession.CreateHandTracker(HandEXT.RightExt, _oxrInstance);
+                    _handTrackingState.Initialize();
+                    Console.WriteLine("Hand tracking initialized");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed to initialize hand tracking: " + ex.Message);
+                    _isHandTrackingSupported = false;
+                }
             }
 
             // Actions
@@ -2596,6 +2702,11 @@ namespace Microsoft.Xna.Platform.XR
                 if (_passthroughLayerFB != null)
                     _passthroughLayerFB.Dispose();
 
+                if (_leftHandTracker != null)
+                    _leftHandTracker.Dispose();
+                if (_rightHandTracker != null)
+                    _rightHandTracker.Dispose();
+
                 if (_HeadSpace != null)
                     _HeadSpace.Dispose();
                 if (_LocalSpace != null)
@@ -2619,6 +2730,9 @@ namespace Microsoft.Xna.Platform.XR
 
             _passthroughFB = null;
             _passthroughLayerFB = null;
+
+            _leftHandTracker = null;
+            _rightHandTracker = null;
 
             _HeadSpace = null;
             _LocalSpace = null;

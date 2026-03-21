@@ -95,6 +95,11 @@ namespace Microsoft.Xna.Framework.XR
             throw new PlatformNotSupportedException();
         }
 
+        public override HandTrackingState GetHandTrackingState()
+        {
+            throw new PlatformNotSupportedException();
+        }
+
         public override void EndSessionAsync()
         {
             throw new PlatformNotSupportedException();

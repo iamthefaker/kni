@@ -225,7 +225,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="nkast.LibOXR" Version="1.0.0" />
+    <ProjectReference Include="..\..\LibOXR\src\LibOXR\LibOXR.csproj">
+      <Project>{C504C560-DCCE-4B3D-85B3-5CE62A57D74E}</Project>
+      <Name>LibOXR</Name>
+    </ProjectReference>
     <PackageReference Include="Silk.NET.OpenXR" Version="2.22.0" />
   </ItemGroup>
 

@@ -105,6 +105,11 @@ namespace Microsoft.Xna.Framework.XR
             return _strategy.GetHandsState();
         }
 
+        public HandTrackingState GetHandTrackingState()
+        {
+            return _strategy.GetHandTrackingState();
+        }
+
         public void EndSessionAsync()
         {
             _strategy.EndSessionAsync();

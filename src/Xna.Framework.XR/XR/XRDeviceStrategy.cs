@@ -30,6 +30,7 @@ namespace Microsoft.Xna.Platform.XR
         public abstract void CommitRenderTarget(XREye eye, RenderTarget2D rt);
         public abstract int EndFrame();
         public abstract HandsState GetHandsState();
+        public abstract HandTrackingState GetHandTrackingState();
         public abstract void EndSessionAsync();
         public abstract void TrackFloorLevelAsync(bool enable);
 

@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36109.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EffectCompiler", "EffectCompiler.csproj", "{46474D32-2E58-6957-6E64-6F7773324D47}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XNA.Framework.Content.Pipeline", "..\..\src\Xna.Framework.Content.Pipeline\XNA.Framework.Content.Pipeline.csproj", "{FFA4C556-2A69-DBB5-F91C-E520840E98F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XNA.Framework.Content.Pipeline.Graphics", "..\..\src\Xna.Framework.Content.Pipeline.Graphics\XNA.Framework.Content.Pipeline.Graphics.csproj", "{1636965B-B849-F569-E134-9E9B569F913F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XNA.Framework.Content.Pipeline.Graphics.MojoProcessor", "..\..\src\Xna.Framework.Content.Pipeline.Graphics.MojoProcessor\XNA.Framework.Content.Pipeline.Graphics.MojoProcessor.csproj", "{EF6F18DA-61BC-C722-D0DC-48A847B61C28}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{46474D32-2E58-6957-6E64-6F7773324D47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46474D32-2E58-6957-6E64-6F7773324D47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46474D32-2E58-6957-6E64-6F7773324D47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46474D32-2E58-6957-6E64-6F7773324D47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFA4C556-2A69-DBB5-F91C-E520840E98F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFA4C556-2A69-DBB5-F91C-E520840E98F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFA4C556-2A69-DBB5-F91C-E520840E98F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFA4C556-2A69-DBB5-F91C-E520840E98F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1636965B-B849-F569-E134-9E9B569F913F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1636965B-B849-F569-E134-9E9B569F913F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1636965B-B849-F569-E134-9E9B569F913F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1636965B-B849-F569-E134-9E9B569F913F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF6F18DA-61BC-C722-D0DC-48A847B61C28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF6F18DA-61BC-C722-D0DC-48A847B61C28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF6F18DA-61BC-C722-D0DC-48A847B61C28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF6F18DA-61BC-C722-D0DC-48A847B61C28}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {15DC3F97-4895-499A-A435-8DF7E5C95139}
+	EndGlobalSection
+EndGlobal

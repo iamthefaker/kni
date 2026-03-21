@@ -60,9 +60,19 @@ namespace Microsoft.Xna.Platform.Graphics
 
         protected override void PlatformInitialize()
         {
-            // set actual backbuffer size
-            PresentationParameters.BackBufferWidth = ((IPlatformGraphicsContext)_mainContext).Strategy.ToConcrete<ConcreteGraphicsContext>().GlContext.Canvas.Width;
-            PresentationParameters.BackBufferHeight = ((IPlatformGraphicsContext)_mainContext).Strategy.ToConcrete<ConcreteGraphicsContext>().GlContext.Canvas.Height;
+            if (BlazorGameWindow.UseOffscreenCanvas)
+            {
+                // OffscreenCanvas mode: GL context has no DOM canvas.
+                // Use the dimensions from PresentationParameters (set by C# bootstrap).
+                PresentationParameters.BackBufferWidth = BlazorGameWindow.OffscreenWidth;
+                PresentationParameters.BackBufferHeight = BlazorGameWindow.OffscreenHeight;
+            }
+            else
+            {
+                // set actual backbuffer size
+                PresentationParameters.BackBufferWidth = ((IPlatformGraphicsContext)_mainContext).Strategy.ToConcrete<ConcreteGraphicsContext>().GlContext.Canvas.Width;
+                PresentationParameters.BackBufferHeight = ((IPlatformGraphicsContext)_mainContext).Strategy.ToConcrete<ConcreteGraphicsContext>().GlContext.Canvas.Height;
+            }
         }
 
 
@@ -111,7 +121,7 @@ namespace Microsoft.Xna.Platform.Graphics
         {
             IntPtr handle = PresentationParameters.DeviceWindowHandle;
             GameWindow gameWindow = BlazorGameWindow.FromHandle(handle);
-            Canvas canvas = ((BlazorGameWindow)gameWindow)._canvas;
+            BlazorGameWindow blazorWindow = (BlazorGameWindow)gameWindow;
 
             ContextAttributes contextAttributes = new ContextAttributes();
             contextAttributes.PowerPreference = ContextAttributes.PowerPreferenceType.HighPerformance;
@@ -152,20 +162,49 @@ namespace Microsoft.Xna.Platform.Graphics
             }
 
             IWebGLRenderingContext glContext = null;
-            switch (this.GraphicsProfile)
-            {
-                case GraphicsProfile.Reach:
-                    glContext = canvas.GetContext<IWebGLRenderingContext>(contextAttributes);
-                    break;
-                case GraphicsProfile.HiDef:
-                    glContext = canvas.GetContext<IWebGL2RenderingContext>(contextAttributes);
-                    break;
-                case GraphicsProfile.FL10_0:
-                    glContext = canvas.GetContext<IWebGL2RenderingContext>(contextAttributes);
-                    break;
 
-                default:
-                    throw new NotSupportedException("GraphicsProfile "+ this.GraphicsProfile);
+            if (BlazorGameWindow.UseOffscreenCanvas && blazorWindow._offscreenCanvas != null)
+            {
+                // OffscreenCanvas mode: GL context was already created by worker-gl-bootstrap.mjs.
+                // Register it with the OffscreenCanvas wrapper so GetContext returns it.
+                int glUid = BlazorGameWindow.OffscreenGLContextUid;
+                if (glUid > 0)
+                {
+                    blazorWindow._offscreenCanvas.SetExistingWebGL2Context(glUid);
+                }
+
+                switch (this.GraphicsProfile)
+                {
+                    case GraphicsProfile.Reach:
+                        glContext = blazorWindow._offscreenCanvas.GetContext<IWebGLRenderingContext>(contextAttributes);
+                        break;
+                    case GraphicsProfile.HiDef:
+                    case GraphicsProfile.FL10_0:
+                        glContext = blazorWindow._offscreenCanvas.GetContext<IWebGL2RenderingContext>(contextAttributes);
+                        break;
+                    default:
+                        throw new NotSupportedException("GraphicsProfile " + this.GraphicsProfile);
+                }
+            }
+            else
+            {
+                // Standard Canvas mode (proxied or single-threaded)
+                Canvas canvas = blazorWindow._canvas;
+                switch (this.GraphicsProfile)
+                {
+                    case GraphicsProfile.Reach:
+                        glContext = canvas.GetContext<IWebGLRenderingContext>(contextAttributes);
+                        break;
+                    case GraphicsProfile.HiDef:
+                        glContext = canvas.GetContext<IWebGL2RenderingContext>(contextAttributes);
+                        break;
+                    case GraphicsProfile.FL10_0:
+                        glContext = canvas.GetContext<IWebGL2RenderingContext>(contextAttributes);
+                        break;
+
+                    default:
+                        throw new NotSupportedException("GraphicsProfile " + this.GraphicsProfile);
+                }
             }
 
             return new ConcreteGraphicsContext(context, glContext);

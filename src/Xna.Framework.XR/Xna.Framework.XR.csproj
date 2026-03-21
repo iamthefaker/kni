@@ -38,7 +38,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="XR\HandJoint.cs" />
+    <Compile Include="XR\HandJointState.cs" />
     <Compile Include="XR\HandsState.cs" />
+    <Compile Include="XR\HandTrackingState.cs" />
     <Compile Include="XR\HeadsetState.cs" />
     <Compile Include="XR\XRDevice.cs" />
     <Compile Include="XR\XRDeviceState.cs" />

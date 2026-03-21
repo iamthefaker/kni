@@ -216,6 +216,11 @@ namespace Microsoft.Xna.Framework.XR
             return default(HandsState);
         }
 
+        public override HandTrackingState GetHandTrackingState()
+        {
+            return default;
+        }
+
         public override void EndSessionAsync()
         {
         }

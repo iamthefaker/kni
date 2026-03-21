@@ -47,6 +47,11 @@ namespace Microsoft.Xna.Framework
 
         #region Internal Properties
 
+        public static bool UseOffscreenCanvas { get; set; }
+        public static int OffscreenCanvasUid { get; set; }
+        public static int OffscreenGLContextUid { get; set; }
+        public static int OffscreenWidth { get; set; }
+        public static int OffscreenHeight { get; set; }
 
         #endregion
 
@@ -60,6 +65,8 @@ namespace Microsoft.Xna.Framework
         {
             get
             {
+                if (UseOffscreenCanvas)
+                    return new Rectangle(0, 0, OffscreenWidth, OffscreenHeight);
                 return new Rectangle(0, 0, _canvas.Width, _canvas.Height);
             }
         }
@@ -108,6 +115,7 @@ namespace Microsoft.Xna.Framework
         #endregion
 
         internal Canvas _canvas { get; private set; }
+        internal OffscreenCanvas _offscreenCanvas { get; private set; }
         internal Window wasmWindow { get { return _window; } }
 
         internal BlazorGameWindow(ConcreteGame concreteGame)
@@ -116,6 +124,12 @@ namespace Microsoft.Xna.Framework
 
             _window = Window.Current;
             _canvas = _window.Document.GetElementById<Canvas>("theCanvas");
+
+            if (UseOffscreenCanvas && OffscreenCanvasUid > 0)
+            {
+                _offscreenCanvas = new OffscreenCanvas(OffscreenCanvasUid, true);
+            }
+
             _instances.Add(this.Handle, this);
 
             ChangeClientSize(GraphicsDeviceManager.DefaultBackBufferWidth, GraphicsDeviceManager.DefaultBackBufferHeight);
@@ -283,11 +297,28 @@ namespace Microsoft.Xna.Framework
                 if (gdm.GraphicsDevice == null)
                     return;
 
-                _canvas.Width = _window.InnerWidth;
-                _canvas.Height = _window.InnerHeight;
+                int newWidth, newHeight;
 
-                int newWidth  = _canvas.Width;
-                int newHeight = _canvas.Height;
+                if (UseOffscreenCanvas && _offscreenCanvas != null)
+                {
+                    // OffscreenCanvas mode: update dimensions via worker-local JS.
+                    // The OffscreenCanvas.Width/Height setters call nkOffscreenCanvas.SetWidth/SetHeight
+                    // which execute locally on the worker (no proxy).
+                    newWidth = _window.InnerWidth;
+                    newHeight = _window.InnerHeight;
+                    _offscreenCanvas.Width = newWidth;
+                    _offscreenCanvas.Height = newHeight;
+                    OffscreenWidth = newWidth;
+                    OffscreenHeight = newHeight;
+                }
+                else
+                {
+                    _canvas.Width = _window.InnerWidth;
+                    _canvas.Height = _window.InnerHeight;
+                    newWidth = _canvas.Width;
+                    newHeight = _canvas.Height;
+                }
+
                 if (newWidth  != gdm.PreferredBackBufferWidth
                 ||  newHeight != gdm.PreferredBackBufferHeight)
                 {

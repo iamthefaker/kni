@@ -265,6 +265,11 @@ namespace Microsoft.Xna.Platform.XR.LibOVR
             return _handsState;
         }
 
+        public override HandTrackingState GetHandTrackingState()
+        {
+            return default;
+        }
+
         public override void EndSessionAsync()
         {
             throw new NotImplementedException();
