@@ -37,8 +37,15 @@ namespace Microsoft.Xna.Framework.Content
                     break;
                 case SurfaceFormat.Dxt3:
                 case SurfaceFormat.Dxt5:
+#if BLAZORGL
+                    // Always decompress DXT on WebGL — DXT3's 4×4 block compression with
+                    // 4-bit alpha produces visible speckle/blotchy artifacts on anti-aliased
+                    // font glyphs, even when the browser advertises S3TC support.
+                    convertedFormat = SurfaceFormat.Color;
+#else
                     if (!((IPlatformGraphicsDevice)input.GetGraphicsDevice()).Strategy.Capabilities.SupportsS3tc)
                         convertedFormat = SurfaceFormat.Color;
+#endif
                     break;
                 case SurfaceFormat.Dxt3SRgb:
                 case SurfaceFormat.Dxt5SRgb:
@@ -91,23 +98,19 @@ namespace Microsoft.Xna.Framework.Content
                         break;
                     case SurfaceFormat.Dxt3:
                     case SurfaceFormat.Dxt3SRgb:
-                        if (!((IPlatformGraphicsDevice)input.GetGraphicsDevice()).Strategy.Capabilities.SupportsS3tc)
-                            if (!((IPlatformGraphicsDevice)input.GetGraphicsDevice()).Strategy.Capabilities.SupportsS3tc &&
-                                convertedFormat == SurfaceFormat.Color)
-                            {
-                                levelData = DxtDecoder.DecompressDxt3(levelData, levelWidth, levelHeight);
-                                levelDataSizeInBytes = levelData.Length;
-                            }
+                        if (convertedFormat == SurfaceFormat.Color || convertedFormat == SurfaceFormat.ColorSRgb)
+                        {
+                            levelData = DxtDecoder.DecompressDxt3(levelData, levelWidth, levelHeight);
+                            levelDataSizeInBytes = levelData.Length;
+                        }
                         break;
                     case SurfaceFormat.Dxt5:
                     case SurfaceFormat.Dxt5SRgb:
-                        if (!((IPlatformGraphicsDevice)input.GetGraphicsDevice()).Strategy.Capabilities.SupportsS3tc)
-                            if (!((IPlatformGraphicsDevice)input.GetGraphicsDevice()).Strategy.Capabilities.SupportsS3tc &&
-                                convertedFormat == SurfaceFormat.Color)
-                            {
-                                levelData = DxtDecoder.DecompressDxt5(levelData, levelWidth, levelHeight);
-                                levelDataSizeInBytes = levelData.Length;
-                            }
+                        if (convertedFormat == SurfaceFormat.Color || convertedFormat == SurfaceFormat.ColorSRgb)
+                        {
+                            levelData = DxtDecoder.DecompressDxt5(levelData, levelWidth, levelHeight);
+                            levelDataSizeInBytes = levelData.Length;
+                        }
                         break;
                     case SurfaceFormat.Bgra5551:
                         if (!((IPlatformGraphicsDevice)input.GetGraphicsDevice()).Strategy.Capabilities.SupportsBgra5551)
